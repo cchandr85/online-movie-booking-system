@@ -1,0 +1,227 @@
+openapi: 3.0.0
+info:
+  title: Online Ticket Booking APIs
+  description: API for browsing movie shows by location and date and book tickets
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+  description: Local development server
+paths:
+  /api/browse/shows:
+    get:
+      summary: Browse movie shows
+      description: "Retrieve available movie shows based on movie ID, city, and date"
+      operationId: getMovieShows
+      parameters:
+      - name: movieId
+        in: query
+        description: The unique identifier of the movie
+        required: true
+        schema:
+          type: integer
+          example: 1
+      - name: city
+        in: query
+        description: The city where the movie is showing
+        required: true
+        schema:
+          type: string
+          example: Bangalore
+      - name: date
+        in: query
+        description: The date for which to retrieve shows (format YYYY-MM-DD)
+        required: true
+        schema:
+          type: string
+          format: date
+          example: 2026-02-01
+      responses:
+        "200":
+          description: Successful response with list of movie shows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Show"
+              example:
+              - movie: Interstellar
+                screen: Screen 1
+                showDate: 2026-02-01
+                showId: 1
+                showTime: 18:30
+                theatre: PVR Orion Mall
+  /api/bookings:
+    post:
+      summary: Create a booking
+      description: Submit a booking request for a movie show with selected seats
+      operationId: createBooking
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingRequest"
+            example:
+              showId: 1
+              seats:
+              - 2
+        required: true
+      responses:
+        "200":
+          description: Booking successfully created
+components:
+  schemas:
+    Show:
+      required:
+      - movie
+      - screen
+      - showDate
+      - showId
+      - showTime
+      - theatre
+      type: object
+      properties:
+        showId:
+          type: integer
+          description: Unique identifier for the show
+          example: 1
+        movie:
+          type: string
+          description: Name of the movie
+          example: Interstellar
+        theatre:
+          type: string
+          description: Name of the theatre
+          example: PVR Orion Mall
+        screen:
+          type: string
+          description: Screen number or name
+          example: Screen 1
+        showDate:
+          type: string
+          description: Date of the show
+          format: date
+          example: 2026-02-01
+        showTime:
+          type: string
+          description: Time of the show (format HH:MM)
+          example: 18:30
+    BookingRequest:
+      required:
+      - seats
+      - showId
+      type: object
+      properties:
+        showId:
+          type: integer
+          description: The unique identifier of the show to book
+          example: 1
+        seats:
+          type: array
+          description: Array of seat numbers to book
+          example:
+          - 2
+          items:
+            type: integer
+        seatIds:
+          type: array
+          description: Optional array of seat IDs to book
+          example:
+          - 2
+          items:
+            type: integer
+    BookingResponse:
+      type: object
+      properties:
+        show:
+          $ref: "#/components/schemas/Shows"
+        showSeats:
+          $ref: "#/components/schemas/ShowSeats"
+        status:
+          type: string
+          description: Status of the booking
+          example: CONFIRMED
+          enum:
+          - CONFIRMED
+          - PENDING
+          - CANCELLED
+    Shows:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the show
+          example: 1
+        movie_id:
+          $ref: "#/components/schemas/Movie"
+        screen_id:
+          $ref: "#/components/schemas/Screen"
+        show_date:
+          type: string
+          description: Date of the show
+          format: date
+          example: 2026-02-01
+        show_time:
+          type: string
+          description: Time of the show
+          format: time
+          example: 18:30:00
+    Movie:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the movie
+          example: Interstellar
+        language:
+          type: string
+          description: Language of the movie
+          example: English
+        duration_minutes:
+          type: integer
+          description: Duration of the movie in minutes
+          example: 169
+    Screen:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name or number of the screen
+          example: Screen 1
+        total_seats:
+          type: integer
+          description: Total number of seats in the screen
+          example: 50
+        theatre:
+          $ref: "#/components/schemas/Theatre"
+    Theatre:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the theatre
+          example: PVR Orion Mall
+        city:
+          type: string
+          description: City where the theatre is located
+          example: Bangalore
+    ShowSeats:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the show seat
+          example: 3
+        seat:
+          type: object
+          description: Seat details
+        show:
+          $ref: "#/components/schemas/Shows"
+        status:
+          type: string
+          description: Status of the seat
+          example: BOOKED
+          enum:
+          - BOOKED
+          - AVAILABLE
+          - RESERVED
